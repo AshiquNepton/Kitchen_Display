@@ -1,0 +1,104 @@
+# ==============================================================================
+# Git Ignore Configuration for Nepton KDS
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Antigravity, Gemini & AI Assistant Artifacts
+# ------------------------------------------------------------------------------
+.antigravity/
+.gemini/
+.agent/
+brain/
+scratch/
+.system_generated/
+*transcript*.jsonl
+
+# ------------------------------------------------------------------------------
+# 2. Local Documentation & Profile Showcase Files
+# ------------------------------------------------------------------------------
+README.md
+LINKEDIN_SHOWCASE.md
+
+# ------------------------------------------------------------------------------
+# 3. Credentials, Secrets & Encryption Keys
+# ------------------------------------------------------------------------------
+# Local KDS DPAPI / Symmetric secrets
+*.dat
+*.dat.tmp
+*.key
+kds_config.json
+secret.dat
+secret.key
+kds.dat
+
+# Environment variables & token files
+.env
+.env.*
+*.env
+*.token
+*.pem
+*.cer
+*.crt
+*.pfx
+*.p12
+credentials.json
+client_secret*.json
+service_account*.json
+
+# ------------------------------------------------------------------------------
+# 4. Python Virtual Environments
+# ------------------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+*.venv/
+env.bak/
+venv.bak/
+
+# ------------------------------------------------------------------------------
+# 5. Databases, Runtime & Local Working Directories
+# ------------------------------------------------------------------------------
+# SQLite local runtime cache
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-journal
+
+# Local logs & browser user-data-dir
+*.log
+*.log.*
+browser/
+error_img/
+*.tmp
+*.bak
+
+# ------------------------------------------------------------------------------
+# 6. Build, PyInstaller & Installer Outputs
+# ------------------------------------------------------------------------------
+build/
+dist/
+installer_output/
+*.spec.bak
+*.manifest
+
+# ------------------------------------------------------------------------------
+# 7. Python Bytecode & Cache Files
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+
+# ------------------------------------------------------------------------------
+# 8. IDE & Operating System Artifacts
+# ------------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

@@ -1,0 +1,124 @@
+{% load static %}<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kitchen Display</title>
+<link rel="icon" type="image/png" href="{% static 'kds/icon.png' %}">
+<link rel="shortcut icon" href="{% static 'kds/icon.ico' %}">
+<link rel="apple-touch-icon" href="{% static 'kds/icon.png' %}">
+<link rel="stylesheet" href="{% static 'kds/kds.css' %}">
+</head>
+<body data-refresh="{{ refresh }}" data-warn="{{ warn }}" data-late="{{ late }}" data-delayed="{{ delayed }}">
+<header>
+ <div class="hl">
+  <div class="brand" title="Kitchen Display System">
+   <img class="app-logo" src="{% static 'kds/icon.png' %}" alt="KDS">
+   <h1></h1>
+  </div>
+  <button id="cat-btn" class="cat-pill-btn" type="button" title="Select categories for this KDS screen">
+    <span data-ic="grid"></span>
+    <span id="cat-label">All Categories</span>
+  </button>
+  <nav id="tabs">
+    <button data-tab="pending" class="on" title="Pending"><span class="bt"><span data-ic="clock"></span><b id="c-pending">0</b></span><small>Pending</small></button>
+    <button data-tab="completed" title="Completed"><span class="bt"><span data-ic="check-circle"></span><b id="c-completed">0</b></span><small>Completed</small></button>
+  </nav>
+  <nav id="types"></nav>
+ </div>
+ <div id="clock" aria-label="Current time">00:00:00</div>
+ <div class="hr">
+  <label class="search"><span data-ic="search"></span><input id="q" type="search" inputmode="none" autocomplete="off" placeholder="Search invoice, table or customer"></label>
+  <button id="sound-btn" class="ibtn" title="Kitchen Alert Sound: Click to test sound" aria-label="Kitchen Alert Sound"><span data-ic="bell"></span></button>
+  <button id="kbd-btn" class="ibtn" title="On-screen keyboard" aria-label="On-screen keyboard"><span data-ic="keyboard"></span></button>
+  <button id="fs-btn" class="ibtn" title="Full screen" aria-label="Full screen"><span data-ic="maximize"></span></button>
+  <span id="status" class="dot" title="Connecting…"></span>
+  <button id="gear" class="ibtn" title="Settings (admin password)" aria-label="Settings"><span data-ic="lock"></span></button>
+  <button id="app-close" class="ibtn btn-close" title="Close application" aria-label="Close application"><span data-ic="x"></span></button>
+ </div>
+</header>
+<div id="err" role="alert" hidden>
+  <span class="eic" data-ic="alert"></span>
+  <div class="etx"><b id="err-title"></b><small id="err-msg"></small><small id="err-hint"></small></div>
+  <button id="retry" type="button"><span data-ic="refresh"></span>Retry</button>
+</div>
+<main class="kds-layout">
+  <div class="grid-container">
+    <div id="grid"></div>
+  </div>
+  <aside id="summary-panel" class="summary-sidebar" aria-label="Items Summary">
+    <div class="summary-header">
+      <div class="summary-title-row">
+        <span class="sum-icon" data-ic="list"></span>
+        <b class="sum-title">Items Summary</b>
+      </div>
+      <span id="summary-badge" class="summary-badge">0 items</span>
+    </div>
+    <div id="summary-body" class="summary-body"></div>
+  </aside>
+</main>
+
+<div id="modal" hidden>
+  <div class="box" role="dialog" aria-modal="true">
+    <header>
+      <h2><span data-ic="utensils"></span><span id="m-title"></span></h2>
+      <span class="tm"><span data-ic="clock"></span><span id="m-timer" class="timer"></span></span>
+      <button id="m-x" class="ibtn" aria-label="Close" type="button"><span data-ic="x"></span></button>
+    </header>
+    <div id="m-items"></div>
+    <footer>
+      <span id="m-sum"></span>
+      <span>
+        <button id="m-print" type="button"><span data-ic="printer"></span>Print</button>
+        <button id="m-all" type="button"><span data-ic="check-circle"></span>Mark all done</button>
+        <button id="m-close" class="on" type="button"><span data-ic="x"></span>Close</button>
+      </span>
+    </footer>
+  </div>
+</div>
+
+<div id="lock" hidden>
+  <form id="lock-form" class="box small" autocomplete="off">
+    <header>
+      <h2><span data-ic="lock"></span>Admin password</h2>
+      <button type="button" id="lock-x" class="ibtn" aria-label="Close"><span data-ic="x"></span></button>
+    </header>
+    <div class="lock-body">
+      <input id="pw" type="password" inputmode="none" maxlength="6" autocomplete="off" placeholder="Enter password">
+      <p id="pw-err" class="err" hidden>Wrong password.</p>
+    </div>
+    <footer><span></span><button type="submit" class="on"><span data-ic="lock"></span>Unlock</button></footer>
+  </form>
+</div>
+
+<div id="cat-modal" hidden>
+  <div class="box cat-box" role="dialog" aria-modal="true">
+    <header>
+      <h2><span data-ic="grid"></span>KDS Category Filter</h2>
+      <button id="cat-x" class="ibtn" aria-label="Close" type="button"><span data-ic="x"></span></button>
+    </header>
+    <div class="cat-modal-intro">
+      <p>Select categories to display on this screen. Only items in checked categories will show on orders and print from this KDS.</p>
+      <div class="cat-modal-tools">
+        <button type="button" id="cat-select-all" class="btn-sub"><span data-ic="check"></span>Select All</button>
+        <button type="button" id="cat-clear-all" class="btn-sub"><span data-ic="x"></span>Clear All</button>
+        <div class="cat-search-box">
+          <span data-ic="search"></span>
+          <input type="text" id="cat-search" placeholder="Search category…" autocomplete="off">
+        </div>
+      </div>
+    </div>
+    <div id="cat-checklist" class="cat-checklist"></div>
+    <footer>
+      <span id="cat-summary">All categories active (showing all items)</span>
+      <span>
+        <button id="cat-cancel" type="button">Cancel</button>
+        <button id="cat-apply" class="on" type="button"><span data-ic="check"></span>Apply Filter</button>
+      </span>
+    </footer>
+  </div>
+</div>
+<script id="cat-data" type="application/json">{{ categories_json|safe }}</script>
+<script id="station-cat-data" type="application/json">{{ station_categories_json|safe }}</script>
+<script src="{% static 'kds/icons.js' %}"></script>
+<script src="{% static 'kds/kbd.js' %}"></script>
+<script src="{% static 'kds/kds.js' %}"></script>
+</body></html>

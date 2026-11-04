@@ -1,0 +1,114 @@
+{% load static %}<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDS connection setup</title>
+<link rel="icon" type="image/png" href="{% static 'kds/icon.png' %}">
+<link rel="shortcut icon" href="{% static 'kds/icon.ico' %}">
+<link rel="apple-touch-icon" href="{% static 'kds/icon.png' %}">
+<link rel="stylesheet" href="{% static 'kds/kds.css' %}">
+</head><body>
+<form class="form" method="post">{% csrf_token %}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <h2 style="display:flex;align-items:center;gap:8px;margin:0;">
+      <img src="{% static 'kds/icon.png' %}" alt="KDS" style="width:28px;height:28px;border-radius:4px;object-fit:contain;">
+      {% if editing %}Connection settings{% else %}Connect to SQL Server{% endif %}
+    </h2>
+    <button type="button" id="setup-close" class="ibtn btn-close" title="Close application" style="padding:4px 8px;background:rgba(193,57,45,0.25);color:#ff9999;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:16px;line-height:1;">✕</button>
+  </div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <label>Server name or IP<input name="server" value="{{ form.server }}" required placeholder="192.168.1.10 or HOST\SQLEXPRESS"></label>
+  <label>Port (ignored for named instances)<input name="port" value="{{ form.port }}"></label>
+  <label>Database name<input name="database" value="{{ form.database }}" required></label>
+  <label>Username<input name="username" value="{{ form.username }}" required autocomplete="off"></label>
+  <label>Password<input name="password" type="password" autocomplete="new-password" {% if not editing %}required{% else %}placeholder="Leave blank to keep the saved password"{% endif %}></label>
+  <label>ODBC driver<input name="driver" list="drivers" value="{{ form.driver }}" required></label>
+  <datalist id="drivers">{% for d in drivers %}<option value="{{ d }}">{% endfor %}</datalist>
+  <label>Show as delayed after (minutes)<input name="delayed_after" type="number" min="0" step="1" value="{{ form.delayed_after }}" placeholder="e.g. 15 (leave blank to turn off)"></label>
+  <label class="chk"><input type="checkbox" name="unpaid_only" {% if form.unpaid_only %}checked{% endif %}> Show unpaid invoices only (CASHCOL &le; 0)</label>
+
+  <fieldset class="pr-set">
+    <legend>Printer &amp; Receipt Settings (80mm Thermal)</legend>
+    <label>Printer type
+      <select id="pr_type" name="printer_type" onchange="togglePrinterType(this.value)">
+        <option value="windows" {% if form.printer_type == "windows" %}selected{% endif %}>Windows / USB Printer (Installed)</option>
+        <option value="ip" {% if form.printer_type == "ip" %}selected{% endif %}>IP / Network Printer (TCP)</option>
+      </select>
+    </label>
+
+    <div id="win_pr_box">
+      <label>Installed printer
+        <input name="printer_name" list="installed_printers_list" value="{{ form.printer_name }}" placeholder="Choose or type printer name">
+      </label>
+      <datalist id="installed_printers_list">
+        {% for p in installed_printers %}
+        <option value="{{ p }}">{{ p }}{% if p == default_printer %} (Default){% endif %}</option>
+        {% endfor %}
+      </datalist>
+      <small style="color:var(--mut);display:block;margin-top:4px;">
+        Choose from printers installed on this device (e.g. {{ default_printer|default:"POS-80C" }})
+      </small>
+    </div>
+
+    <div id="ip_pr_box" style="display:none;">
+      <label>IP address / Hostname
+        <input name="printer_name_ip" value="{% if form.printer_type == 'ip' %}{{ form.printer_name }}{% endif %}" placeholder="e.g. 192.168.1.100">
+      </label>
+      <label>TCP port <small>(usually 9100)</small>
+        <input name="printer_port" type="number" min="1" max="65535" value="{{ form.printer_port }}" placeholder="9100">
+      </label>
+    </div>
+
+    <hr>
+    <label>Business name<input name="biz_name" value="{{ form.biz_name }}"></label>
+    <label>Branch name<input name="biz_branch" value="{{ form.biz_branch }}"></label>
+    <label>City<input name="biz_city" value="{{ form.biz_city }}"></label>
+    <label>Country<input name="biz_country" value="{{ form.biz_country }}"></label>
+    <label>Phone number<input name="biz_phone" value="{{ form.biz_phone }}"></label>
+    <label>CR NO (Commercial Registration Number)<input name="biz_cr" value="{{ form.biz_cr }}"></label>
+    <label>Receipt title (English)<input name="receipt_title" value="{{ form.receipt_title }}" placeholder="Tax Invoice"></label>
+    <label>Receipt title (Arabic / local language)<input name="receipt_title_ar" value="{{ form.receipt_title_ar }}" placeholder="فاتورة ضريبية" dir="auto"></label>
+  </fieldset>
+
+  {% if categories %}
+  <fieldset class="pr-set" style="margin-top:16px;">
+    <legend>Station Categories</legend>
+    <p style="color:var(--mut);font-size:13px;margin:4px 0 10px 0;">
+      Select which categories this KDS station is responsible for (or leave all unchecked to show All Categories):
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px;max-height:220px;overflow-y:auto;padding:4px;">
+      {% for cat in categories %}
+      <label style="background:#f0f4f8;padding:8px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" name="station_categories" value="{{ cat.id }}" {% if cat.id in station_categories %}checked{% endif %}>
+        <div style="flex:1;">
+          <b style="color:var(--tx);display:block;">{{ cat.name }}</b>
+          <span style="color:var(--mut);font-size:11px;">ID: {{ cat.id }} ({{ cat.count }} items)</span>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endif %}
+
+  <p><button class="on" type="submit">Test and save</button>{% if editing %} <a href="/">Cancel</a>{% endif %}</p>
+</form>
+<script>
+function togglePrinterType(v) {
+  const isIp = v === 'ip';
+  document.getElementById('win_pr_box').style.display = isIp ? 'none' : 'block';
+  document.getElementById('ip_pr_box').style.display = isIp ? 'block' : 'none';
+}
+togglePrinterType(document.getElementById('pr_type').value);
+
+const setupClose = document.getElementById('setup-close');
+if (setupClose) {
+  setupClose.onclick = async () => {
+    if (confirm("Close Kitchen Display application?")) {
+      const csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1];
+      try {
+        await fetch('/api/close/', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf}, body: '{}'});
+      } catch (e) {}
+      window.close();
+    }
+  };
+}
+</script></body></html>
