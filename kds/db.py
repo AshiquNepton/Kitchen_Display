@@ -148,11 +148,13 @@ def fetch_orders(cfg, categories=None):
     if cat_ids:
         cat_list_str = ",".join(str(c) for c in cat_ids)
         cat_total = f"""(SELECT COUNT(*) FROM TradeDetails td
-                         INNER JOIN InventoryItems ii ON td.StockID = ii.ItemID
+                         INNER JOIN Stock s ON td.StockID = s.StockID
+                         INNER JOIN InventoryItems ii ON s.ItemID = ii.ItemID
                          WHERE td.TypeCode = 2 AND td.InvNo = tm.InvNo
                          AND ii.Category IN ({cat_list_str}))"""
         cat_done = f"""(SELECT COUNT(*) FROM TradeDetails td
-                        INNER JOIN InventoryItems ii ON td.StockID = ii.ItemID
+                        INNER JOIN Stock s ON td.StockID = s.StockID
+                        INNER JOIN InventoryItems ii ON s.ItemID = ii.ItemID
                         WHERE td.TypeCode = 2 AND td.InvNo = tm.InvNo
                         AND ISNULL(td.ItemStatus, 0) <> 0
                         AND ii.Category IN ({cat_list_str}))"""
@@ -203,7 +205,8 @@ def fetch_orders(cfg, categories=None):
                        ig_attr.Description AS AttributeName
                 FROM TradeDetails td
                 INNER JOIN TradeMaster tm ON td.TypeCode = tm.TypeCode AND td.InvNo = tm.InvNo
-                LEFT JOIN InventoryItems ii ON td.StockID = ii.ItemID
+                LEFT JOIN Stock s ON td.StockID = s.StockID
+                LEFT JOIN InventoryItems ii ON s.ItemID = ii.ItemID
                 LEFT JOIN ItemGroups ig ON ii.Category = ig.GroupID
                 LEFT JOIN ItemGroups ig_attr ON td.WHID = ig_attr.GroupID AND td.WHID > 0
                 WHERE td.TypeCode = 2 AND tm.SaveStatus = -1 AND td.InvNo IN ({placeholders})
@@ -254,7 +257,8 @@ def fetch_items(cfg, inv, categories=None):
                ig_attr.Description AS AttributeName
         FROM TradeDetails td
         INNER JOIN TradeMaster tm ON td.TypeCode = tm.TypeCode AND td.InvNo = tm.InvNo
-        LEFT JOIN InventoryItems ii ON td.StockID = ii.ItemID
+        LEFT JOIN Stock s ON td.StockID = s.StockID
+        LEFT JOIN InventoryItems ii ON s.ItemID = ii.ItemID
         LEFT JOIN ItemGroups ig ON ii.Category = ig.GroupID
         LEFT JOIN ItemGroups ig_attr ON td.WHID = ig_attr.GroupID AND td.WHID > 0
         WHERE td.TypeCode = 2 AND tm.SaveStatus = -1 AND td.InvNo = ?
@@ -287,7 +291,8 @@ def _counts(cur, inv, categories=None):
         SELECT COUNT(*), SUM(CASE WHEN ISNULL(td.ItemStatus, 0) <> 0 THEN 1 ELSE 0 END)
         FROM TradeDetails td
         INNER JOIN TradeMaster tm ON td.TypeCode = tm.TypeCode AND td.InvNo = tm.InvNo
-        LEFT JOIN InventoryItems ii ON td.StockID = ii.ItemID
+        LEFT JOIN Stock s ON td.StockID = s.StockID
+        LEFT JOIN InventoryItems ii ON s.ItemID = ii.ItemID
         LEFT JOIN ItemGroups ig ON ii.Category = ig.GroupID
         WHERE td.TypeCode = 2 AND tm.SaveStatus = -1 AND td.InvNo = ?
         {cat_where}
@@ -321,7 +326,7 @@ def set_item(cfg, inv, slno, done, categories=None):
 def set_all(cfg, inv, categories=None):
     cat_ids = [int(c) for c in categories if str(c).isdigit()] if categories else []
     if cat_ids:
-        where = f" AND StockID IN (SELECT ItemID FROM InventoryItems WHERE Category IN ({','.join(str(c) for c in cat_ids)}))"
+        where = f" AND StockID IN (SELECT s.StockID FROM Stock s INNER JOIN InventoryItems ii ON s.ItemID = ii.ItemID WHERE ii.Category IN ({','.join(str(c) for c in cat_ids)}))"
     else:
         where = ""
     return _update(cfg, inv, where, [], 1, categories=categories)

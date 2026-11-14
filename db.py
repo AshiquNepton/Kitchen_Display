@@ -157,7 +157,9 @@ def fetch_items(cfg, inv):
     sql = """
         SELECT td.SlNo, td.Qty, td.Rate, td.Description, ISNULL(td.ItemStatus, 0) AS ItemStatus,
                ii.ItemName, ii.ArabicName
-        FROM TradeDetails td LEFT JOIN InventoryItems ii ON td.StockID = ii.ItemID
+        FROM TradeDetails td
+        LEFT JOIN Stock s ON td.StockID = s.StockID
+        LEFT JOIN InventoryItems ii ON s.ItemID = ii.ItemID
         WHERE td.TypeCode = 2 AND td.InvNo = ? ORDER BY td.SlNo
     """
     num = lambda v: int(v) if v == int(v) else round(float(v), 2)
